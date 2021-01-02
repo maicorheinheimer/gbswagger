@@ -1,10 +1,19 @@
 unit GBSwagger.Model.PathResponse;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  Generics.Collections,
+  {$ELSE}
   System.SysUtils,
   System.Generics.Collections,
+  {$ENDIF}
   GBSwagger.Model.Types,
   GBSwagger.Model.Header,
   GBSwagger.Model.Interfaces;

@@ -1,11 +1,19 @@
 unit GBSwagger.Register;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  Generics.Collections,
+  {$ELSE}
+  System.Generics.Collections,
+  {$ENDIF}
   GBSwagger.Model.Interfaces,
-  GBSwagger.Register.Interfaces,
-  System.Generics.Collections;
+  GBSwagger.Register.Interfaces;
 
 type TGBSwaggerRegister = class(TInterfacedObject, IGBSwaggerRegister)
 

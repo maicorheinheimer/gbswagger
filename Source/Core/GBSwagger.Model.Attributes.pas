@@ -1,9 +1,17 @@
 unit GBSwagger.Model.Attributes;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils;
+  {$ELSE}
   System.SysUtils;
+  {$ENDIF}
 
 type
   SwagClass = class(TCustomAttribute)

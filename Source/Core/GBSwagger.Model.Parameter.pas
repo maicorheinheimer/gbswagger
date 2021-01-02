@@ -1,11 +1,21 @@
 unit GBSwagger.Model.Parameter;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  StrUtils,
+  Rtti,
+  {$ELSE}
   System.SysUtils,
   System.StrUtils,
   System.Rtti,
+  {$ENDIF}
   GBSwagger.Model.Interfaces,
   GBSwagger.RTTI,
   GBSwagger.Model.Types;

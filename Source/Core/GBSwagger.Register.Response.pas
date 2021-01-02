@@ -1,14 +1,24 @@
 unit GBSwagger.Register.Response;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
-  GBSwagger.Register.Interfaces,
-  GBSwagger.Model.Interfaces,
-  GBSwagger.Model.PathResponse,
+  {$IF DEFINED(FPC)}
+  Classes,
+  sysUtils,
+  Generics.Collections,
+  {$ELSE}
   System.Classes,
   System.sysUtils,
-  System.Generics.Collections;
+  System.Generics.Collections,
+  {$ENDIF}
+  GBSwagger.Register.Interfaces,
+  GBSwagger.Model.Interfaces,
+  GBSwagger.Model.PathResponse;
 
 type TGBSwaggerRegisterResponse = class(TInterfacedObject, IGBSwaggerRegisterResponse)
 

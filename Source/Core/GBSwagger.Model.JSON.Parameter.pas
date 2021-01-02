@@ -1,16 +1,27 @@
 unit GBSwagger.Model.JSON.Parameter;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
-  GBSwagger.Model.JSON.Interfaces,
-  GBSwagger.Model.JSON.Utils,
-  GBSwagger.Model.Interfaces,
-  GBSwagger.Model.Types,
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  StrUtils,
+  Variants,
+  fpjson,
+  {$ELSE}
   System.SysUtils,
   System.StrUtils,
   System.Variants,
-  System.JSON;
+  System.JSON,
+  {$ENDIF}
+  GBSwagger.Model.JSON.Interfaces,
+  GBSwagger.Model.JSON.Utils,
+  GBSwagger.Model.Interfaces,
+  GBSwagger.Model.Types;
 
 type TGBSwaggerModelJSONParameter = class(TInterfacedObject, IGBSwaggerModelJSON)
 
@@ -22,7 +33,7 @@ type TGBSwaggerModelJSONParameter = class(TInterfacedObject, IGBSwaggerModelJSON
     constructor create(SwaggerParameter: IGBSwaggerParameter);
     class function New(SwaggerParameter: IGBSwaggerParameter): IGBSwaggerModelJSON;
 
-    function ToJSON: TJSONValue;
+    function ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 end;
 
 implementation
@@ -42,30 +53,33 @@ end;
 procedure TGBSwaggerModelJSONParameter.ParamEnum(AJsonObject: TJSONObject);
 var
   jsonArray: TJSONArray;
+  LJSON: TJSONObject;
   i        : Integer;
 begin
   jsonArray := TJSONArray.Create;
   for i := 0 to Pred(Length(FSwaggerParameter.EnumValues)) do
     jsonArray.Add(VarToStr( FSwaggerParameter.EnumValues[i]));
 
-  AJsonObject
-    .AddPair('type', 'array')
-    .AddPair('items', TJSONObject.Create
-                        .AddPair('type', 'string')
-                        .AddPair('enum', jsonArray))
-                        .AddPair('default', VarToStr(FSwaggerParameter.EnumValues[0]));
+  LJSON := TJSONObject.Create;
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', 'string');
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('enum', jsonArray);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('default', VarToStr(FSwaggerParameter.EnumValues[0]));
+
+  AJsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', 'array');
+  AJsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('items', LJSON);
 end;
 
-function TGBSwaggerModelJSONParameter.ToJSON: TJSONValue;
+function TGBSwaggerModelJSONParameter.ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 var
   jsonObject: TJSONObject;
+  jsonSchema: TJSONObject;
   schemaName: string;
 begin
-  jsonObject := TJSONObject.Create
-                  .AddPair('in', FSwaggerParameter.ParamType.toString)
-                  .AddPair('name', FSwaggerParameter.Name)
-                  .AddPair('description', FSwaggerParameter.Description)
-                  .AddPair('required', TJSONBool.Create(FSwaggerParameter.Required));
+  jsonObject := TJSONObject.Create;
+  jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('in', FSwaggerParameter.ParamType.toString);
+  jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('name', FSwaggerParameter.Name);
+  jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('description', FSwaggerParameter.Description);
+  jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('required', {$IF DEFINED(FPC)}FSwaggerParameter.Required{$ELSE}TJSONBool.Create(FSwaggerParameter.Required){$ENDIF});
 
   schemaName := FSwaggerParameter.SchemaType;
 
@@ -73,30 +87,33 @@ begin
     if FSwaggerParameter.IsArray then
     begin
       if FSwaggerParameter.SchemaType.IsEmpty then
-        jsonObject.AddPair('schema', TGBSwaggerModelJSONUtils.JSONSchemaArray(schemaName))
+        jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('schema', TGBSwaggerModelJSONUtils.JSONSchemaArray(schemaName))
       else
       begin
         if FSwaggerParameter.Schema <> nil then
         begin
-          jsonObject.AddPair('schema', TJSONObject.Create
-                                          .AddPair('type', 'array')
-                                          .AddPair('items', TJSONObject.Create
-                                              .AddPair('$ref', '#/definitions/' + schemaName)) );
+          jsonSchema := TJSONObject.Create;
+          jsonSchema.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', 'array');
+          jsonSchema.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('items', TJSONObject.Create
+              .{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('$ref', '#/definitions/' + schemaName));
+
+          jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('schema', jsonSchema);
         end
         else
-        jsonObject
-          .AddPair('type', 'array')
-          .AddPair('items', TJSONObject.Create.AddPair('type', FSwaggerParameter.SchemaType));
+        begin
+          jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', 'array');
+          jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('items', TJSONObject.Create.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', FSwaggerParameter.SchemaType));
+        end;
       end;
     end
     else
     if FSwaggerParameter.IsObject then
-      jsonObject.AddPair('schema', TGBSwaggerModelJSONUtils.JSONSchemaObject(schemaName))
+      jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('schema', TGBSwaggerModelJSONUtils.JSONSchemaObject(schemaName))
     else
     if FSwaggerParameter.IsEnum then
       ParamEnum(jsonObject)
     else
-      jsonObject.AddPair('type', schemaName);
+      jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', schemaName);
 
   result := jsonObject;
 end;

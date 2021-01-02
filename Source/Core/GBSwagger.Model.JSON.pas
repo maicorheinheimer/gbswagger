@@ -1,8 +1,24 @@
 unit GBSwagger.Model.JSON;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$MODESWITCH TypeHelpers}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  Generics.Collections,
+  //Generics.Defaults,
+  fpjson,
+  {$ELSE}
+  System.SysUtils,
+  System.Generics.Collections,
+  System.Generics.Defaults,
+  System.JSON,
+  {$ENDIF}
   GBSwagger.Model.JSON.Interfaces,
   GBSwagger.Model.JSON.Info,
   GBSwagger.Model.JSON.Schema,
@@ -11,11 +27,7 @@ uses
   GBSwagger.Model.Interfaces,
   GBSwagger.Model.Types,
   GBSwagger.Model,
-  GBSwagger.RTTI,
-  System.SysUtils,
-  System.Generics.Collections,
-  System.Generics.Defaults,
-  System.JSON;
+  GBSwagger.RTTI;
 
 type TGBSwaggerModelJSON = class(TGBSwaggerModel, IGBSwaggerModelJSON)
 
@@ -35,7 +47,7 @@ type TGBSwaggerModelJSON = class(TGBSwaggerModel, IGBSwaggerModelJSON)
     destructor Destroy; override;
     class function New(Swagger: IGBSwagger): IGBSwaggerModelJSON;
 
-    function ToJSON: TJSONValue;
+    function ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 
 end;
 
@@ -71,16 +83,18 @@ begin
   result := TJSONObject.Create;
   swaggerSchema := FSwagger.Schemas;
 
-  TArray.Sort<IGBSwaggerSchema>(swaggerSchema,
-    TComparer<IGBSwaggerSchema>.Construct(
-      function (const Left, Right: IGBSwaggerSchema): Integer
-      begin
-        result := Left.Name.CompareTo(Right.Name);
-      end));
+
+  //TArray
+  //.Sort<IGBSwaggerSchema>(swaggerSchema,
+  //  TComparer<IGBSwaggerSchema>.Construct(
+  //    function (const Left, Right: IGBSwaggerSchema): Integer
+  //    begin
+  //      result := Left.Name.CompareTo(Right.Name);
+  //    end));
 
   for i := 0 to Pred(Length(swaggerSchema)) do
   begin
-    result.AddPair(
+    result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(
       swaggerSchema[i].Name,
       TGBSwaggerModelJSONSchema.New(swaggerSchema[i]).ToJSON
     );
@@ -96,11 +110,11 @@ begin
   result := TJSONObject.create;
   swaggerPaths := FSwagger.Paths;
 
-  TArray.Sort<IGBSwaggerPath>(swaggerPaths,
-    TComparer<IGBSwaggerPath>.construct( function(const Left, Right: IGBSwaggerPath): Integer
-    begin
-      result := Left.Tags[0].CompareTo(Right.Tags[0]);
-    end));
+  //TArray.Sort<IGBSwaggerPath>(swaggerPaths,
+  //  TComparer<IGBSwaggerPath>.construct( function(const Left, Right: IGBSwaggerPath): Integer
+  //  begin
+  //    result := Left.Tags[0].CompareTo(Right.Tags[0]);
+  //  end));
 
   for i := 0 to Pred(Length(swaggerPaths)) do
   begin
@@ -108,7 +122,7 @@ begin
     if not path.StartsWith('/') then
       path := '/' + path;
 
-    Result.AddPair(path, TGBSwaggerModelJSONPath.New(swaggerPaths[i]).ToJSON);
+    Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(path, TGBSwaggerModelJSONPath.New(swaggerPaths[i]).ToJSON);
   end;
 end;
 
@@ -133,7 +147,7 @@ begin
   securities := FSwagger.Securities;
 
   for i := 0 to Pred(Length(securities)) do
-    Result.AddPair(securities[i].Description, TGBSwaggerModelJSONSecurity.New(securities[i]).ToJSON);
+    Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(securities[i].Description, TGBSwaggerModelJSONSecurity.New(securities[i]).ToJSON);
 end;
 
 class function TGBSwaggerModelJSON.New(Swagger: IGBSwagger): IGBSwaggerModelJSON;
@@ -143,7 +157,7 @@ end;
 
 procedure TGBSwaggerModelJSON.ProcessOptions(AJsonObject: TJSOnObject);
 var
-  LPair: TJSONPair;
+  LPair: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONPair{$ENDIF};
   LItem: TObject;
   i: Integer;
 
@@ -153,11 +167,11 @@ begin
 
   for i := AJsonObject.Count -1 downto 0  do
   begin
-    LPair := TJSONPair(AJsonObject.Pairs[i]);
-    if LPair.JsonValue is TJSOnObject then
+    LPair := {$IF DEFINED(FPC)}AJsonObject.Extract(i){$ELSE}TJSONPair(AJsonObject.Pairs[i]){$ENDIF};
+    if LPair.{$IF DEFINED(FPC)}JSONType = jtObject{$ELSE}JsonValue is TJSOnObject{$ENDIF}then
     begin
-      ProcessOptions(TJSOnObject(LPair.JsonValue));
-      if LPair.JsonValue.ToString.Equals('{}') then
+      ProcessOptions(TJSONObject(LPair{$IF DEFINED(FPC)}{$ELSE}.JsonValue{$ENDIF}));
+      if LPair.{$IF DEFINED(FPC)}{$ELSE}JsonValue.{$ENDIF}ToString.Equals('{}') then
       begin
         AJsonObject.RemovePair(LPair.JsonString.Value).DisposeOf;
         Continue;
@@ -186,20 +200,23 @@ begin
   end;
 end;
 
-function TGBSwaggerModelJSON.ToJSON: TJSONValue;
+function TGBSwaggerModelJSON.ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
+var
+  LJSON: TJSONObject;
 begin
-  result := TJSONObject.Create
-              .AddPair('swagger', FSwagger.Version)
-              .AddPair('info', TGBSwaggerModelJSONInfo.New(FSwagger.Info).ToJSON)
-              .AddPair('host', FSwagger.Host)
-              .AddPair('basePath', FSwagger.BasePath)
-              .AddPair('schemes', JSONSchemes)
-              .AddPair('consumes', JSONContentTypes(FSwagger.Consumes))
-              .AddPair('produces', JSONContentTypes(FSwagger.Produces))
-              .AddPair('securityDefinitions', JSONSecurity)
-              .AddPair('paths', JSONPath)
-              .AddPair('definitions', JSONDefinitions);
+  LJSON := TJSONObject.Create;
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('swagger', FSwagger.Version);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('info', TGBSwaggerModelJSONInfo.New(FSwagger.Info).ToJSON);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('host', FSwagger.Host);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('basePath', FSwagger.BasePath);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('schemes', JSONSchemes);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('consumes', JSONContentTypes(FSwagger.Consumes));
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('produces', JSONContentTypes(FSwagger.Produces));
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('securityDefinitions', JSONSecurity);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('paths', JSONPath);
+  LJSON.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('definitions', JSONDefinitions);
 
+  Result := LJSON;
   ProcessOptions(TJSONObject(result));
 end;
 

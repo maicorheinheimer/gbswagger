@@ -1,8 +1,25 @@
 unit GBSwagger.Model;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  TypInfo,
+  StrUtils,
+  Generics.Collections,
+  fpHTTP,
+  {$ELSE}
+  System.SysUtils,
+  System.TypInfo,
+  System.StrUtils,
+  System.Generics.Collections,
+  Web.HTTPApp
+  {$ENDIF}
   GBSwagger.Model.Interfaces,
   GBSwagger.Model.Types,
   GBSwagger.Model.Info,
@@ -11,12 +28,7 @@ uses
   GBSwagger.Model.Schema,
   GBSwagger.Model.Config,
   GBSwagger.Model.Security,
-  GBSwagger.RTTI,
-  System.SysUtils,
-  System.TypInfo,
-  System.StrUtils,
-  System.Generics.Collections,
-  Web.HTTPApp;
+  GBSwagger.RTTI;
 
 type TGBSwaggerModel = class(TInterfacedObject, IGBSwagger)
 

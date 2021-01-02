@@ -1,11 +1,21 @@
 unit GBSwagger.RTTI;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  Rtti,
+  SysUtils,
+  TypInfo,
+  {$ELSE}
   System.Rtti,
   System.SysUtils,
   System.TypInfo,
+  {$ENDIF}
   GBSwagger.Model.Interfaces,
   GBSwagger.Model.Attributes,
   GBSwagger.Path.Attributes;
@@ -58,6 +68,7 @@ type
       // Colaboração do Giorgio para essa compatibilidade
       function IsNullable : Boolean;
       function NullableType : string;
+      function GetValueNullable(Value: TObject): TValue;
 
       function IsEmptyValue(AObject: TObject): Boolean;
 
@@ -133,7 +144,11 @@ end;
 
 function TGBSwaggerRTTI.FindType(ATypeName: string): TRttiType;
 begin
+  {$IF DEFINED(FPC)}
+  Result := FContext.GetType(TypeInfo(ATypeName));
+  {$ELSE}
   Result := FContext.FindType(ATypeName);
+  {$ENDIF}
 end;
 
 class function TGBSwaggerRTTI.GetInstance: IGBSwaggerRTTI;
@@ -188,9 +203,9 @@ end;
 
 function TGBSwaggerRTTIPropertyHelper.ArrayType: string;
 begin
-  result := EmptyStr;
-  if (IsArray) then
-    result := TRttiDynamicArrayType(Self.PropertyType).ElementType.Name;
+  //result := EmptyStr;
+  //if (IsArray) then
+  //  result := TRttiDynamicArrayType(Self.PropertyType).ElementType.Name;
 end;
 
 function TGBSwaggerRTTIPropertyHelper.GetAttribute<T>: T;
@@ -205,9 +220,15 @@ end;
 
 function TGBSwaggerRTTIPropertyHelper.GetClassType: TClass;
 begin
+  {$IF DEFINED(FPC)}
+  result := TRttiInstanceType( TGBSwaggerRTTI.GetInstance.FindType(
+    PropertyType.QualifiedClassName
+  )).MetaclassType;
+  {$ELSE}
   result := TRttiInstanceType( TGBSwaggerRTTI.GetInstance.FindType(
     PropertyType.QualifiedName
   )).MetaclassType;
+  {$ENDIF}
 end;
 
 function TGBSwaggerRTTIPropertyHelper.GetEnumNames: TArray<String>;
@@ -216,11 +237,19 @@ var
   unitName: string;
   enumName: string;
 begin
+  {$IF DEFINED(FPC)}
+  unitName := PropertyType.QualifiedClassName.Replace('.' + PropertyType.ToString, EmptyStr);
+  {$ELSE}
   unitName := PropertyType.QualifiedName.Replace('.' + PropertyType.ToString, EmptyStr);
+  {$ENDIF}
   i        := 0;
 
   repeat
+    {$IF DEFINED(FPC)}
+    enumName := GetEnumName(TGBSwaggerRTTI.GetInstance.FindType(PropertyType.QualifiedClassName).Handle, i);
+    {$ELSE}
     enumName := GetEnumName(TGBSwaggerRTTI.GetInstance.FindType(PropertyType.QualifiedName).Handle, i);
+    {$ENDIF}
     if not enumName.Equals(unitName) then
     begin
       SetLength(result, i + 1);
@@ -248,6 +277,27 @@ end;
 function TGBSwaggerRTTIPropertyHelper.GetSwagNumber: SwagNumber;
 begin
   result := GetAttribute<SwagNumber>;
+end;
+
+function TGBSwaggerRTTIPropertyHelper.GetValueNullable(Value: TObject): TValue;
+var
+  Ctx: TRttiContext;
+  propMethod: TRttiMethod;
+  propValue: TValue;
+  LHasValue: boolean;
+begin
+  propValue := Self.GetValue(Value);
+
+  propMethod  := Ctx.GetType(propValue.TypeInfo).GetMethod('GetHasValue');
+  LHasValue   := propMethod.Invoke(propValue, []).AsBoolean;
+
+  if LHasValue then
+  begin
+    propMethod := Ctx.GetType(propValue.TypeInfo).GetMethod('GetValue');
+    Result := propMethod.Invoke(propValue, []);
+  end
+  else
+    Result := nil;
 end;
 
 function TGBSwaggerRTTIPropertyHelper.IsArray: Boolean;
@@ -282,17 +332,33 @@ end;
 function TGBSwaggerRTTIPropertyHelper.IsEmptyValue(AObject: TObject): Boolean;
 begin
   Result := False;
+
+  if IsNullable then
+    Exit(Self.GetValueNullable(AObject).IsEmpty);
+
   if IsString then
-    Exit(Self.GetValue(AObject).AsString.Trim.IsEmpty);
+    if IsNullable then
+      Exit(Self.GetValueNullable(AObject).AsString.Trim.IsEmpty)
+    else
+      Exit(Self.GetValue(AObject).AsString.Trim.IsEmpty);
 
   if IsInteger then
-    Exit(Self.GetValue(AObject).AsInteger = 0);
+    if IsNullable then
+      Exit(Self.GetValueNullable(AObject).AsInteger = 0)
+    else
+      Exit(Self.GetValue(AObject).AsInteger = 0);
 
   if IsFloat then
-    Exit(Self.GetValue(AObject).AsExtended = 0);
+    if IsNullable then
+      Exit(Self.GetValueNullable(AObject).AsExtended = 0)
+    else
+      Exit(Self.GetValue(AObject).AsExtended = 0);
 
   if IsDateTime then
-    Exit(Self.GetValue(AObject).AsExtended = 0);
+    if IsNullable then
+      Exit(Self.GetValueNullable(AObject).AsExtended = 0)
+    else
+      Exit(Self.GetValue(AObject).AsExtended = 0);
 end;
 
 function TGBSwaggerRTTIPropertyHelper.IsEnum: Boolean;

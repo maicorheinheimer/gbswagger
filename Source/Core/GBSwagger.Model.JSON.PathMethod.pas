@@ -1,17 +1,27 @@
 unit GBSwagger.Model.JSON.PathMethod;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  StrUtils,
+  fpjson,
+  {$ELSe}
+  System.SysUtils,
+  System.StrUtils,
+  System.JSON,
+  {$ENDIF}
   GBSwagger.Model.JSON.Interfaces,
   GBSwagger.Model.JSON.Utils,
   GBSwagger.Model.JSON.PathResponse,
   GBSwagger.Model.JSON.Parameter,
   GBSwagger.Model.Interfaces,
-  GBSwagger.Model.Types,
-  System.SysUtils,
-  System.StrUtils,
-  System.JSON;
+  GBSwagger.Model.Types;
 
 type TGBSwaggerModelJSONPathMethod = class(TInterfacedObject, IGBSwaggerModelJSON)
 
@@ -27,7 +37,7 @@ type TGBSwaggerModelJSONPathMethod = class(TInterfacedObject, IGBSwaggerModelJSO
     constructor create(SwaggerPathMethod: IGBSwaggerPathMethod);
     class function New(SwaggerPathMethod: IGBSwaggerPathMethod): IGBSwaggerModelJSON;
 
-    function ToJSON: TJSONValue;
+    function ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 end;
 
 implementation
@@ -41,15 +51,15 @@ end;
 
 function TGBSwaggerModelJSONPathMethod.JSONMethod: TJSONObject;
 begin
-  Result := TJSONObject.Create
-                .AddPair('tags', JSONTags)
-                .AddPair('summary', FSwaggerPathMethod.Summary)
-                .AddPair('description', FSwaggerPathMethod.Description)
-                .AddPair('consumes', TGBSwaggerModelJSONUtils.JSONContentTypes(FSwaggerPathMethod.Consumes))
-                .AddPair('produces', TGBSwaggerModelJSONUtils.JSONContentTypes(FSwaggerPathMethod.Produces))
-                .AddPair('parameters', JSONParameters)
-                .AddPair('responses', JSONResponses)
-                .AddPair('security', JSONSecurity);
+  Result := TJSONObject.Create;
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('tags', JSONTags);
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('summary', FSwaggerPathMethod.Summary);
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('description', FSwaggerPathMethod.Description);
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('consumes', TGBSwaggerModelJSONUtils.JSONContentTypes(FSwaggerPathMethod.Consumes));
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('produces', TGBSwaggerModelJSONUtils.JSONContentTypes(FSwaggerPathMethod.Produces));
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('parameters', JSONParameters);
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('responses', JSONResponses);
+  Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('security', JSONSecurity);
 end;
 
 function TGBSwaggerModelJSONPathMethod.JSONParameters: TJSONArray;
@@ -58,7 +68,7 @@ var
 begin
   result := TJSONArray.Create;
   for i := 0 to Pred(Length(FSwaggerPathMethod.Parameters)) do
-    Result.AddElement(TGBSwaggerModelJSONParameter.New(FSwaggerPathMethod.Parameters[i]).ToJSON);
+    Result.{$IF DEFINED(FPC)}Add{$ELSE}AddElement{$ENDIF}(TGBSwaggerModelJSONParameter.New(FSwaggerPathMethod.Parameters[i]).ToJSON);
 end;
 
 function TGBSwaggerModelJSONPathMethod.JSONResponses: TJSONObject;
@@ -68,7 +78,7 @@ begin
   result := TJSONObject.Create;
 
   for i := 0 to Pred(Length(FSwaggerPathMethod.Responses)) do
-    Result.AddPair(FSwaggerPathMethod.Responses[i].HttpCode.ToString,
+    Result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(FSwaggerPathMethod.Responses[i].HttpCode.ToString,
                    TGBSwaggerModelJSONPathResponse
                       .New(FSwaggerPathMethod.Responses[i])
                         .ToJSON);
@@ -87,12 +97,12 @@ begin
   begin
     securities := swagger.Securities;
     for i := 0 to Pred(Length(securities)) do
-    Result.Add(TJSONObject.Create.AddPair(securities[i].Description, TJSONArray.Create));
+    Result.Add(TJSONObject.Create.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(securities[i].Description, TJSONArray.Create));
   end
   else
   begin
     for i := 0 to Pred(Length(FSwaggerPathMethod.Securities)) do
-      Result.Add(TJSONObject.Create.AddPair(FSwaggerPathMethod.Securities[i], TJSONArray.Create));
+      Result.Add(TJSONObject.Create.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(FSwaggerPathMethod.Securities[i], TJSONArray.Create));
   end;
 end;
 
@@ -110,7 +120,7 @@ begin
   result := Self.create(SwaggerPathMethod);
 end;
 
-function TGBSwaggerModelJSONPathMethod.ToJSON: TJSONValue;
+function TGBSwaggerModelJSONPathMethod.ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 begin
   result := JSONMethod;
 

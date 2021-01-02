@@ -1,16 +1,26 @@
 unit GBSwagger.Model.JSON.Path;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  StrUtils,
+  fpjson,
+  {$ELSE}
+  System.SysUtils,
+  System.StrUtils,
+  System.JSON,
+  {$ENDIF}
   GBSwagger.Model.JSON.Interfaces,
   GBSwagger.Model.JSON.Utils,
   GBSwagger.Model.JSON.PathMethod,
   GBSwagger.Model.Interfaces,
-  GBSwagger.Model.Types,
-  System.SysUtils,
-  System.StrUtils,
-  System.JSON;
+  GBSwagger.Model.Types;
 
 type TGBSwaggerModelJSONPath = class(TInterfacedObject, IGBSwaggerModelJSON)
 
@@ -21,7 +31,7 @@ type TGBSwaggerModelJSONPath = class(TInterfacedObject, IGBSwaggerModelJSON)
     constructor create(SwaggerPath: IGBSwaggerPath);
     class function New(SwaggerPath: IGBSwaggerPath): IGBSwaggerModelJSON;
 
-    function ToJSON: TJSONValue;
+    function ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 end;
 
 implementation
@@ -38,7 +48,7 @@ begin
   result := Self.create(SwaggerPath);
 end;
 
-function TGBSwaggerModelJSONPath.ToJSON: TJSONValue;
+function TGBSwaggerModelJSONPath.ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 var
   jsonObject: TJSONObject;
   i         : Integer;
@@ -46,7 +56,7 @@ begin
   jsonObject := TJSONObject.Create;
 
   for i := 0 to Pred(Length(FSwaggerPath.Methods)) do
-    jsonObject.AddPair(
+    jsonObject.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(
         FSwaggerPath.Methods[i].MethodType.toString,
         TGBSwaggerModelJSONPathMethod.New(FSwaggerPath.Methods[i]).ToJSON
     );

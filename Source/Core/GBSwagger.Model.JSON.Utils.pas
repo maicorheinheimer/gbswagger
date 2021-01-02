@@ -1,9 +1,17 @@
 unit GBSwagger.Model.JSON.Utils;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  fpjson,
+  {$ELSE}
   System.JSON,
+  {$ENDIF}
   GBSwagger.Model.Types;
 
 type TGBSwaggerModelJSONUtils = class
@@ -41,16 +49,17 @@ end;
 
 class function TGBSwaggerModelJSONUtils.JSONSchemaArray(SchemaName: string): TJSONObject;
 begin
-  result := TJSONObject.Create
-              .AddPair('type', 'array')
-              .AddPair('items',
-                  TJSONObject.Create.AddPair('$ref', '#/definitions/' + SchemaName));
+  result := TJSONObject.Create;
+  result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', 'array');
+  result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('items',
+      TJSONObject.Create.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('$ref', '#/definitions/' + SchemaName));
 end;
 
 class function TGBSwaggerModelJSONUtils.JSONSchemaObject(SchemaName: string): TJSONObject;
 begin
-  result := TJSONObject.Create
-                .AddPair('$ref', '#/definitions/' + SchemaName);
+  result := TJSONObject.Create;
+
+  result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('$ref', '#/definitions/' + SchemaName);
 end;
 
 end.

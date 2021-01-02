@@ -1,17 +1,28 @@
 unit Horse.GBSwagger.Register;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  Rtti,
+  StrUtils,
+  SysUtils,
+  Classes,
+  {$ELSE}
+  System.Rtti,
+  System.StrUtils,
+  System.SysUtils,
+  System.Classes,
+  {$ENDIF}
   Horse,
   GBSwagger.Model.Interfaces,
   GBSwagger.Path.Attributes,
   GBSwagger.Path.Register,
-  GBSwagger.RTTI,
-  System.Rtti,
-  System.StrUtils,
-  System.SysUtils,
-  System.Classes;
+  GBSwagger.RTTI;
 
 type THorseGBSwaggerRegister = class(TGBSwaggerPathRegister)
 
@@ -30,52 +41,52 @@ implementation
 
 function HorseCallback(AClass: TClass; AMethod: TRttiMethod): THorseCallback;
 begin
-  result :=
-    procedure (Req: THorseRequest; Res: THorseResponse; Next: TProc)
-    var
-      constructMethod : TRttiMethod;
-      instance        : TObject;
-      args            : array of TValue;
+  //result :=
+    //procedure (Req: THorseRequest; Res: THorseResponse; Next: TProc)
+    //var
+    //  constructMethod : TRttiMethod;
+    //  instance        : TObject;
+    //  args            : array of TValue;
+    //
+      //procedure raiseConstructorException;
+      //begin
+      //  raise EMethodNotFound.CreateFmt('You must implemented constructor method ' +
+      //                                  'create(Req: THorseRequest; Res: THorseResponse) ' +
+      //                                  'in %s class', [AClass.ClassName]);
+      //end;
 
-      procedure raiseConstructorException;
-      begin
-        raise EMethodNotFound.CreateFmt('You must implemented constructor method ' +
-                                        'create(Req: THorseRequest; Res: THorseResponse) ' +
-                                        'in %s class', [AClass.ClassName]);
-      end;
-
-    begin
-      constructMethod := TGBSwaggerRTTI.GetInstance.GetType(AClass)
-                            .GetMethod('create');
-
-      if Assigned(constructMethod) then
-      begin
-        if Length( constructMethod.GetParameters ) <> 2 then
-          raiseConstructorException;
-
-        if not constructMethod.GetParameters[0]
-              .ParamType.TypeName.ToLower.Equals('thorserequest')
-        then
-          raiseConstructorException;
-
-        if not constructMethod.GetParameters[1]
-              .ParamType.TypeName.ToLower.Equals('thorseresponse')
-        then
-          raiseConstructorException;
-
-        setLength(args, 2);
-        args[0] := TValue.From<THorseRequest>(Req);
-        args[1] := TValue.From<THorseResponse>(Res);
-
-        instance := constructMethod.Invoke(AClass, args).AsObject;
-        try
-          AMethod.Invoke(instance, []);
-        finally
-          if not instance.InheritsFrom(TInterfacedObject) then
-            instance.Free;
-        end;
-      end
-    end;
+    //begin
+    //  constructMethod := TGBSwaggerRTTI.GetInstance.GetType(AClass)
+    //                        .GetMethod('create');
+    //
+    //  if Assigned(constructMethod) then
+    //  begin
+    //    if Length( constructMethod.GetParameters ) <> 2 then
+    //      raiseConstructorException;
+    //
+    //    if not constructMethod.GetParameters[0]
+    //          .ParamType.TypeName.ToLower.Equals('thorserequest')
+    //    then
+    //      raiseConstructorException;
+    //
+    //    if not constructMethod.GetParameters[1]
+    //          .ParamType.TypeName.ToLower.Equals('thorseresponse')
+    //    then
+    //      raiseConstructorException;
+    //
+    //    setLength(args, 2);
+    //    args[0] := TValue.From<THorseRequest>(Req);
+    //    args[1] := TValue.From<THorseResponse>(Res);
+    //
+    //    instance := constructMethod.Invoke(AClass, args).AsObject;
+    //    try
+    //      AMethod.Invoke(instance, []);
+    //    finally
+    //      if not instance.InheritsFrom(TInterfacedObject) then
+    //        instance.Free;
+    //    end;
+    //  end
+    //end;
 
 
 end;

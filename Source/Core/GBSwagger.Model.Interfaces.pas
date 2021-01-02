@@ -1,10 +1,18 @@
 unit GBSwagger.Model.Interfaces;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  fpHTTP,
+  {$ELSE}
   Web.HTTPApp,
-  GBSwagger.Model.Types;
+  {$ENDIF}
+  Horse.Commons, GBSwagger.Model.Types;
 
 const
   SWAG_STRING  = GBSwagger.Model.Types.SWAG_STRING;

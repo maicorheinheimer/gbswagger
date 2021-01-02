@@ -1,15 +1,25 @@
 unit GBSwagger.Path.Register;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  Rtti,
+  StrUtils,
+  SysUtils,
+  {$ELSE}
+  System.Rtti,
+  System.StrUtils,
+  System.SysUtils,
+  {$ENDIF}
   GBSwagger.Model.Types,
   GBSwagger.Model.Interfaces,
   GBSwagger.RTTI,
-  GBSwagger.Path.Attributes,
-  System.Rtti,
-  System.StrUtils,
-  System.SysUtils;
+  GBSwagger.Path.Attributes;
 
 const
   SWAG_STRING  = GBSwagger.Model.Types.SWAG_STRING;

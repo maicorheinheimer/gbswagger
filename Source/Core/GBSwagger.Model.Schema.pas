@@ -1,5 +1,9 @@
 unit GBSwagger.Model.Schema;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses

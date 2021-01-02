@@ -1,15 +1,26 @@
 unit GBSwagger.Model.PathMethod;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  Generics.Collections,
+  SysUtils,
+  fpHTTP,
+  {$ELSE}
+  System.Generics.Collections,
+  System.SysUtils,
+  Web.HTTPApp,
+  {$ENDIF}
+  Horse.Commons,
   GBSwagger.Model.Interfaces,
   GBSwagger.Model.Types,
   GBSwagger.Model.Parameter,
-  GBSwagger.Model.PathResponse,
-  System.Generics.Collections,
-  System.SysUtils,
-  Web.HTTPApp;
+  GBSwagger.Model.PathResponse;
 
 type TGBSwaggerModelPathMethod = class(TInterfacedObject, IGBSwaggerPathMethod)
 

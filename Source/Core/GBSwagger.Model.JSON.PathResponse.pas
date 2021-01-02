@@ -1,17 +1,26 @@
 unit GBSwagger.Model.JSON.PathResponse;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
+  {$IF DEFINED(FPC)}
+  SysUtils,
+  fpjson,
+  {$ELSE}
+  System.SysUtils,
+  System.StrUtils,
+  System.JSON,
+  {$ENDIF}
   GBSwagger.RTTI,
   GBSwagger.Model.JSON.Utils,
   GBSwagger.Model.JSON.Interfaces,
   GBSwagger.Model.Interfaces,
   GBSwagger.Model.JSON.Header,
-  GBSwagger.Model.Types,
-  System.SysUtils,
-  System.StrUtils,
-  System.JSON;
+  GBSwagger.Model.Types;
 
 type TGBSwaggerModelJSONPathResponse = class(TInterfacedObject, IGBSwaggerModelJSON)
 
@@ -24,7 +33,7 @@ type TGBSwaggerModelJSONPathResponse = class(TInterfacedObject, IGBSwaggerModelJ
     constructor create(SwaggerPathResponse: IGBSwaggerPathResponse);
     class function New(SwaggerPathResponse: IGBSwaggerPathResponse): IGBSwaggerModelJSON;
 
-    function ToJSON: TJSONValue;
+    function ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 end;
 
 implementation
@@ -47,7 +56,7 @@ begin
   if Length(headers) > 0 then
   begin
     for header in headers do
-      result.AddPair(header.Name, TGBSwaggerModelJSONHeader.New(header).ToJSON);
+      result.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}(header.Name, TGBSwaggerModelJSONHeader.New(header).ToJSON);
   end;
 end;
 
@@ -67,20 +76,20 @@ begin
   result := Self.create(SwaggerPathResponse);
 end;
 
-function TGBSwaggerModelJSONPathResponse.ToJSON: TJSONValue;
+function TGBSwaggerModelJSONPathResponse.ToJSON: {$IF DEFINED(FPC)}TJSONData{$ELSE}TJSONValue{$ENDIF};
 var
   json: TJSONObject;
 begin
-  json := TJSONObject.Create
-              .AddPair('description', FSwaggerPathResponse.Description);
+  json := TJSONObject.Create;
+  json.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('description', FSwaggerPathResponse.Description);
 
   if Assigned(FSwaggerPathResponse.Schema) then
-    json.AddPair('schema', JSONSchema)
+    json.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('schema', JSONSchema)
   else
-    json.AddPair('schema', TJSONObject.Create
-                            .AddPair('type', FSwaggerPathResponse.&Type));
+    json.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('schema', TJSONObject.Create
+                            .{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('type', FSwaggerPathResponse.&Type));
 
-  json.AddPair('headers', JSONHeaders);
+  json.{$IF DEFINED(FPC)}Add{$ELSE}AddPair{$ENDIF}('headers', JSONHeaders);
   result := json;
 end;
 

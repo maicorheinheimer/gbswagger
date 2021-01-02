@@ -106,7 +106,10 @@ var
   listValue : TValue;
   i       : Integer;
 begin
-  listValue := AProp.GetValue(Value);
+  if AProp.IsNullable then
+    listValue := AProp.GetValueNullable(Value)
+  else
+    listValue := AProp.GetValue(Value);
 
   if listValue.AsObject = nil then
     Exit;
@@ -128,11 +131,15 @@ var
   propValue: Double;
   number: SwagNumber;
 begin
-  propValue := AProp.GetValue(Value).AsExtended;
   number    := AProp.GetAttribute<SwagNumber>;
 
   if Assigned(number) then
   begin
+    if AProp.IsNullable then
+      propValue := AProp.GetValueNullable(Value).AsExtended
+    else
+      propValue := AProp.GetValue(Value).AsExtended;
+
     if (number.minimum <> 0) and (propValue < number.minimum) then
       raise Exception.CreateFmt('The minimum value to property %s is %s.', [GetPropertyName(AProp, AInstanceName), number.minimum.ToString]);
 
@@ -256,10 +263,13 @@ begin
   str := AProp.GetAttribute<SwagString>;
   if Assigned(str) then
   begin
-    propValue := AProp.GetValue(Value).AsString;
+    if AProp.IsNullable then
+      propValue := AProp.GetValueNullable(Value).AsString
+    else
+      propValue := AProp.GetValue(Value).AsString;
 
-    if propValue.IsEmpty then
-      Exit;
+//    if propValue.IsEmpty then
+//      Exit;
 
     if (str.minLength > 0) and (propValue.Length < str.minLength) then
       raise Exception.CreateFmt('The minimun length to property %s is %d.', [GetPropertyName(AProp, AInstanceName), str.minLength]);

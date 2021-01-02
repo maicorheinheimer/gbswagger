@@ -1,10 +1,18 @@
 unit GBSwagger.Model.Types;
 
+{$IF DEFINED(FPC)}
+{$MODE DELPHI}{$H+}
+{$ENDIF}
+
 interface
 
 uses
-  System.SysUtils,
-  Web.HTTPApp;
+  {$IF DEFINED(FPC)}
+  fpHTTP, SysUtils,
+  {$ELSE}
+  Web.HTTPApp, System.SysUtils,
+  {$ENDIF}
+  Horse.Commons;
 
 const
   SWAG_STRING  = 'string';
